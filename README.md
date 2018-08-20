@@ -4,13 +4,13 @@
 
 ### Aulas
 
-`Controladores SDN` **Arthur** 28/08/2018
+**Arthur** `Controladores SDN` [28/08/2018]
 
 ### Artigos
 
-`[1] Jain, R., & Paul, S. (2013). Network Virtualization and Software Defined Networking for Cloud Computing : A Survey. IEEE Communications Magazine, 51(11), 24–31.` **Arthur** ??/??/2018
+**Arthur** `Jain, R., & Paul, S. (2013). Network Virtualization and Software Defined Networking for Cloud Computing : A Survey. IEEE Communications Magazine, 51(11), 24–31.` [??/??/2018]
 
-`[?] B. A. A. Nunes, M. Mendonca, X. Nguyen, K. Obraczka and T. Turletti, "A Survey of Software-Defined Networking: Past, Present, and Future of Programmable Networks," in IEEE Communications Surveys & Tutorials, vol. 16, no. 3, pp. 1617-1634, Third Quarter 2014.` **Juan** ??/??/2018
+**Juan** `[?] B. A. A. Nunes, M. Mendonca, X. Nguyen, K. Obraczka and T. Turletti, "A Survey of Software-Defined Networking: Past, Present, and Future of Programmable Networks," in IEEE Communications Surveys & Tutorials, vol. 16, no. 3, pp. 1617-1634, Third Quarter 2014.` [??/??/2018]
 
 ## Intro
 
