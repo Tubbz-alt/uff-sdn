@@ -1,5 +1,17 @@
 # SDN
 
+## Calendário
+
+### Aulas
+
+`Controladores SDN` **Arthur** 28/08/2018
+
+### Artigos
+
+`[1] Jain, R., & Paul, S. (2013). Network Virtualization and Software Defined Networking for Cloud Computing : A Survey. IEEE Communications Magazine, 51(11), 24–31.` **Arthur** ??/??/2018
+
+`[?] B. A. A. Nunes, M. Mendonca, X. Nguyen, K. Obraczka and T. Turletti, "A Survey of Software-Defined Networking: Past, Present, and Future of Programmable Networks," in IEEE Communications Surveys & Tutorials, vol. 16, no. 3, pp. 1617-1634, Third Quarter 2014.` **Juan** ??/??/2018
+
 ## Intro
 
 Rever lista do Slide:
@@ -18,8 +30,8 @@ Sistemas - Vertical x Horizontal:
 Assim como Ubuntu é um sistema operacional de computadores, **SDN** é uma espécie de Sistema Operacional de **rede**.
 
 - **Plano de Dados** encaminha os pacotes
-    - Controle de Acesso
-    - QoS
+  - Controle de Acesso
+  - QoS
 - **Plano de Controle** organiza a tabela de encaminhamento
 
 Camada 2 x Camada 3:
@@ -29,6 +41,6 @@ Camada 2 x Camada 3:
 
 ## TODO
 
-- Montar aula
+- Montar aula (ver [A Comparison between Several Software Defined Networking Controllers](https://ieeexplore.ieee.org/document/7357774/))
 - Ler sobre OpenFlow
 - Procurar primeiro artigo sobre OpenFlow
