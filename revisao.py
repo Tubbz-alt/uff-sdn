@@ -1,9 +1,11 @@
-class Node :
+class Node:
     value = int()
     next = None
     prev = None
+
     def __init__(self, value):
         self.value = value
+
 
 class List:
     first = None
@@ -36,8 +38,9 @@ class List:
     def print_on_screen(self):
         aux = self.first
         while aux:
-            print aux.value
+            print(aux.value)
             aux = aux.next
+
 
 list = List()
 list.insert(10)
