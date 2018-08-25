@@ -59,7 +59,7 @@ class LinkedList:
                 while current_node.next and current_node.next < new_node:
                     current_node = current_node.next
                 new_node.next = current_node.next
-                if current_node.next:
+                if new_node.next:
                     new_node.next.prev = new_node
                 current_node.next = new_node
                 new_node.prev = current_node
@@ -68,16 +68,16 @@ class LinkedList:
         current_node = self.__first
         while current_node:
             if current_node == value:
-                return current_node
+                break
             current_node = current_node.next
-        return None
+        return current_node
 
     def remove(self, value):
         if not self.__first:
             return None
 
         node = self.__first
-        if self.__first == value:
+        if node == value:
             self.__first = self.__first.next
             self.__first.prev = None
             node.next = None
@@ -117,4 +117,7 @@ if __name__ == '__main__':
     print('\nRemoving 0, 13...')
     llist.remove(0)
     llist.remove(13)
+    print(llist)
+    print('\nInserting 1, 8, 20...')
+    llist.insert(1, 8, 20)
     print(llist)
