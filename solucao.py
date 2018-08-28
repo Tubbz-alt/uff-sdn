@@ -1,55 +1,56 @@
-class Node:
-    def __init__(self, value):
-        self.next = None
-        self.value = value
-        self.prev = None
-
-    def __lt__(node1, node2):
-        if isinstance(node2, Node):
-            node2 = node2.value
-        return node1.value < node2
-
-    def __gt__(node1, node2):
-        if isinstance(node2, Node):
-            node2 = node2.value
-        return node1.value > node2
-
-    def __le__(node1, node2):
-        if isinstance(node2, Node):
-            node2 = node2.value
-        return node1.value <= node2
-
-    def __ge__(node1, node2):
-        if isinstance(node2, Node):
-            node2 = node2.value
-        return node1.value >= node2
-
-    def __eq__(node1, node2):
-        if isinstance(node2, Node):
-            node2 = node2.value
-        return node1.value == node2
-
-    def __ne__(node1, node2):
-        return not node1 == node2
-
-    def __str__(self):
-        return str(self.value)
-
-    def __del__(self):
-        print('Deleting self (Node ' + str(self) + ')')
-        del self
-
 
 class LinkedList:
 
+    class Node:
+        def __init__(self, value):
+            self.next = None
+            self.value = value
+            self.prev = None
+
+        def __lt__(node1, node2):
+            if isinstance(node2, LinkedList.Node):
+                node2 = node2.value
+            return node1.value < node2
+
+        def __gt__(node1, node2):
+            if isinstance(node2, LinkedList.Node):
+                node2 = node2.value
+            return node1.value > node2
+
+        def __le__(node1, node2):
+            if isinstance(node2, LinkedList.Node):
+                node2 = node2.value
+            return node1.value <= node2
+
+        def __ge__(node1, node2):
+            if isinstance(node2, LinkedList.Node):
+                node2 = node2.value
+            return node1.value >= node2
+
+        def __eq__(node1, node2):
+            if isinstance(node2, LinkedList.Node):
+                node2 = node2.value
+            return node1.value == node2
+
+        def __ne__(node1, node2):
+            return not node1 == node2
+
+        def __str__(self):
+            return str(self.value)
+
+        def __del__(self):
+            print('Deleting self (Node ' + str(self) + ')')
+
     def __init__(self):
         self.__first = None
+        self.__last = None
 
     def insert(self, *values):
         for value in values:
-            new_node = Node(value)
+            new_node = self.Node(value)
             if not self.__first:
                 self.__first = new_node
+                self.__last = new_node
             elif self.__first >= new_node:
                 new_node.next = self.__first
                 new_node.next.prev = new_node
@@ -61,6 +62,8 @@ class LinkedList:
                 new_node.next = current_node.next
                 if new_node.next:
                     new_node.next.prev = new_node
+                else:
+                    self.__last = new_node
                 current_node.next = new_node
                 new_node.prev = current_node
 
@@ -71,6 +74,20 @@ class LinkedList:
                 break
             current_node = current_node.next
         return current_node
+
+    def pop(self):
+        if not self.__last:
+            return None
+
+        node = self.__last
+        if node.prev:
+            self.__last = node.prev
+            self.__last.next = None
+        else:
+            self.__first = None
+            self.__last = None
+        node.prev = None
+        return node
 
     def remove(self, value):
         if not self.__first:
@@ -103,21 +120,19 @@ class LinkedList:
 
     def __del__(self):
         print('Deleting self (LinkedList ' + str(self) + ')')
-        del self
 
 
 if __name__ == '__main__':
     llist = LinkedList()
     print('Inserting 10, 3, 6, 12, 13, 11, 0, 4...')
-    llist.insert(10, 3, 6, 12, 13, 11, 0, 4)
+    llist.insert(1, 5, 3, 6, 0)
     print(llist)
-    print('\nRemoving 6...')
-    llist.remove(6)
+    print('\nPopping...')
+    llist.pop()
     print(llist)
-    print('\nRemoving 0, 13...')
-    llist.remove(0)
-    llist.remove(13)
-    print(llist)
-    print('\nInserting 1, 8, 20...')
-    llist.insert(1, 8, 20)
+    print('\nPopping all...')
+    llist.pop()
+    llist.pop()
+    llist.pop()
+    llist.pop()
     print(llist)
