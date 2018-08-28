@@ -115,5 +115,33 @@ Ryu | Alto | Alto
 [Tutorial POX 1](https://github.com/mininet/openflow-tutorial/wiki/Create-a-Learning-Switch), [T POX 2](pld.cs.luc.edu/courses/netmgmt/sum17/notes/mininet_and_pox.html)
  e [Tutorial Ryu](https://github.com/osrg/ryu/wiki/OpenFlow_Tutorial)
 
-    dpctl dump-flows
-    sudo mn -c
+Comandos importantes:
+
+```bash
+sudo mn -c
+dpctl dump-flows
+```
+
+Primeiro Cenário:
+
+- POX
+- single, 3
+- hub
+
+Segundo Cenário:
+
+- POX
+- single, 3
+- l2_learning
+
+Terceiro Cenário:
+
+- Ryu
+- single, 3
+- simple_switch
+
+Quarto Cenário:
+
+- Ryu
+- linear, 4
+- simple_switch
