@@ -15,7 +15,6 @@ Após a análise teórica, iremos testar 2 controladores escritos em Python:
 Esta apresentação tem como base o artigo
 ["A comparison between several Software Defined Networking controllers"](https://ieeexplore.ieee.org/document/7357774/) e a dissertação [Estudo comparativo de controladores SDN: avaliando a utilização de recursos no hospedeiro](https://repositorio.ufpe.br/bitstream/123456789/16782/1/DISSERTA%c3%87%c3%83O%20Igor%20Marcel%20Leal%20de%20Morais.pdf).
 
-
 ## Referêncial Teórico
 
 As **Redes Definidas por Software** se baseam em 4 pilares:
@@ -71,7 +70,7 @@ As **Redes Definidas por Software** se baseam em 4 pilares:
 3. Bastante apoiado pela industria de redes
 4. Bom para ser utilizado em produção
 5. Boa performance e suporte
-5. Suporta as versões 1.0 e 1.3 do OpenFlow
+6. Suporta as versões 1.0 e 1.3 do OpenFlow
 
 ## Comparação
 
