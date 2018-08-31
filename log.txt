@@ -1,0 +1,2 @@
+A função "even" foi executada em 11:40 do dia 31/08/2018
+Em 11:40, a função "even" foi finalizada e retornou True
