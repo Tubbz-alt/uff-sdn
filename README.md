@@ -100,3 +100,8 @@ startxfce4
 ```
 
 Para aumentar a resolução da tela, primeiro execute o comando `sudo apt install virtualbox-guest-additions-iso -y`. Em seguida, aumente a RAM da VM para 1GB e a RAM da placa gráfica para 64MB.
+
+## Aula Wilson (Datacenter / Openstack)
+
+- O que e como o Neutron faz?
+- Zero Touch (google)
