@@ -10,6 +10,7 @@ Apresentação sobre [Controladores SDN](https://arthurazs.github.io/uff-sdn/con
 
 > **[Arthur]** Controladores SDN **[28/08/2018]**
 >
+> **[Wilson]** OpenStack **[06/09/2018]**
 
 ### Artigos
 
