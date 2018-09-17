@@ -110,6 +110,13 @@ Para aumentar a resolução da tela, primeiro execute o comando `sudo apt instal
 4. Executar o exercicio5: `python exercicio5.py`
 5. Executar o comando pingall no mininet: `pingall`
 
+## l2.py
+
+Modificação do [simple_switch.py](https://github.com/osrg/ryu/blob/master/ryu/app/simple_switch.py) do [controlador Ryu](https://github.com/osrg/ryu/) para sempre que chegar um `packet_in`, imprimir o endereço MAC de origem/destino e imprimir as campos de IP e Porta (caso existam).
+
+Foi modificado o *timeout* dos fluxos para que seja mais fácil a verificação de que os `packet_in` estão sendo impressos corretamente. Também foram removidas as mensagens de log para facilitar a leitura das novas mensagens adicionadas.
+
+Para testar o código, aconselha-se executar o comando `iperf` no mininet.
 
 ## Aula Wilson (Datacenter / Openstack)
 
