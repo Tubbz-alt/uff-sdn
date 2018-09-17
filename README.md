@@ -102,6 +102,15 @@ startxfce4
 
 Para aumentar a resolução da tela, primeiro execute o comando `sudo apt install virtualbox-guest-additions-iso -y`. Em seguida, aumente a RAM da VM para 1GB e a RAM da placa gráfica para 64MB.
 
+## Executando exercicio5
+
+1. Executar o ryu: `ryu-manager simple_switch.py`
+2. Executar o mininet: `sudo mn --controller remote`
+3. Abrir o xterm do s1 no mininet: `xterm s1`
+4. Executar o exercicio5: `python exercicio5.py`
+5. Executar o comando pingall no mininet: `pingall`
+
+
 ## Aula Wilson (Datacenter / Openstack)
 
 - O que e como o Neutron faz?
