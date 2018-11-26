@@ -1,0 +1,28 @@
+clear; clear; mn --controller remote --mac --custom topology.py --topo ciclo
+clear; clear; ryu-manager --observe-links l2_13_4.py
+
+
+sudo ovs-ofctl del-flows s1 in_port="s1-eth2"
+sudo ovs-ofctl add-flow s1 arp,priority=65534,in_port="s1-eth2",actions=drop
+
+
+sudo ovs-ofctl add-flow s1 priority=65533,dl_src=00:00:00:00:00:01,dl_dst=00:00:00:00:00:02,actions=output:"s1-eth2"
+sudo ovs-ofctl add-flow s1 priority=65533,dl_src=00:00:00:00:00:02,dl_dst=00:00:00:00:00:01,actions=output:"s1-eth1"
+
+
+sudo ovs-ofctl add-flow s2 priority=65533,dl_src=00:00:00:00:00:01,dl_dst=00:00:00:00:00:02,actions=output:"s2-eth1"
+sudo ovs-ofctl add-flow s2 priority=65533,dl_src=00:00:00:00:00:02,dl_dst=00:00:00:00:00:01,actions=output:"s2-eth2"
+
+sudo ovs-ofctl add-flow s1 priority=65532,in_port="s1-eth2",actions=drop
+
+
+https://docs.pica8.com/pages/viewpage.action?pageId=3084121
+sudo ovs-ofctl dump-flows s3
+sudo ovs-ofctl add-flow s3 priority=10,in_port=2,dl_type=0x0800,nw_proto=1,actions=dec_ttl,output:"s3-eth1"
+sudo ovs-ofctl add-flow s1 priority=10,in_port=1,dl_type=0x0800,nw_proto=1,actions=dec_ttl,output:"s1-eth3"
+
+iperf -c 10.0.0.2 -u -b 1G -i 1 -t 100 -p 12345
+iperf -s -u -i 1 -p 12345
+
+clear; clear; mn --controller remote --mac --custom topo2.py --topo ciclo
+clear; clear; ryu-manager --observe-links simple_switch_13_st_monitor.py

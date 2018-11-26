@@ -24,8 +24,26 @@ from ryu.lib.packet import ether_types
 from ryu.lib import stplib
 from ryu.lib import hub
 from ryu.controller import dpset
+from ryu.topology import event
 
-SLEEP_TIME = 10.0
+SLEEP_TIME = .5
+GIGABYTE = 10.0 ** 9
+MEGABYTE = 10.0 ** 6
+
+
+class enlace:
+    def __init__(self, src, sport, dst, dport):
+        self.src = src
+        self.src_port = sport
+        self.dst = dst
+        self.dst_port = dport
+
+
+class topologia:
+    def __init__(self):
+        self.sws = []
+        self.enlaces = []
+
 
 class Iperf():
     def __init__(self):
@@ -68,7 +86,62 @@ class SimpleSwitch13(app_manager.RyuApp):
         self.dpset = kwargs.get('dpset', None)
         self.monitor_thread = hub.spawn(self.flow_request)
         self.iperf = Iperf()
+        self._first_time = True
+        self.topo = topologia()
         # self.monitor_thread2 = hub.spawn(self.port_request)
+
+
+
+
+    # -------------------------------------------------------------------------------
+
+    # PORTA
+    @set_ev_cls(event.EventPortDelete)
+    def deleta_porta(self, port):
+        print('Porta deletada switch {}, porta {}' .format(
+            port.port.dpid, port.port.port_no))
+
+    @set_ev_cls(event.EventPortAdd)
+    def adiciona_porta(self, port):
+        print('Porta adicionada switch {}, porta {}' .format(
+            port.port.dpid, port.port.port_no))
+
+    @set_ev_cls(event.EventPortModify)
+    def modifica_porta(self, port):
+        print('Porta modificada switch {}, porta {}, mac {}' .format(
+            port.port.dpid, port.port.port_no, port.port.hw_addr))
+
+    # SWITCH
+
+    @set_ev_cls(event.EventSwitchEnter, MAIN_DISPATCHER)
+    def entrou_switch(self, ev):
+        # list: ev.switch.ports
+        # {'hw_addr': '1a:a5:c5:a3:c5:16', '_config': 0, 'name': 's1-eth1', '_state': 4, 'dpid': 1, 'port_no': 1}
+        print ("Switch ID: {} entrou na topologia!".format(ev.switch.dp.id))
+        # for qwe in ev.switch.ports:
+        #     print '>>>>>>>', qwe.__dict__
+        # print '\n'
+        self.topo.sws.append(ev.switch.dp.id)
+        # self.topo.dp_to_mac[ev.switch.dp.id] = ev.switch.ports.hw_addr
+
+    @set_ev_cls(event.EventSwitchLeave, MAIN_DISPATCHER)
+    def saiu_switch(self, ev):
+        print "Switch ID: {} saiu da topologia!".format(ev.switch.dp.id)
+        del self.topo.sws[self.topo.sws.index(ev.switch.dp.id)]
+
+    # LINK
+    @set_ev_cls(event.EventLinkAdd, MAIN_DISPATCHER)
+    def entrou_link(self, ev):
+        print "ENTROU um link!"  # {} <> {}".format(ev.link.src.__dict__, ev.link.dst.__dict__)
+        self.topo.enlaces.append(enlace(
+            ev.link.src.dpid, ev.link.src.port_no, ev.link.dst.dpid, ev.link.dst.port_no))
+
+    @set_ev_cls(event.EventLinkDelete, MAIN_DISPATCHER)
+    def saiu_link(self, ev):
+        print "SAIU um link!"
+        # del self.topo.elnaces[self.topo.enlaces.index(ev.switch.dp.id)]
+
+    # -------------------------------------------------------------------------------
 
     def flow_request(self):
         while True:
@@ -78,7 +151,6 @@ class SimpleSwitch13(app_manager.RyuApp):
                 req = parser.OFPFlowStatsRequest(dp)
                 dp.send_msg(req)
             hub.sleep(SLEEP_TIME)
-            print('\n')
 
     def port_request(self):
         while True:
@@ -118,13 +190,26 @@ class SimpleSwitch13(app_manager.RyuApp):
 
             value = self.iperf.get(dpid, match)
             if value is not None:
-                bandwidth = (((byte - value) / SLEEP_TIME) * 8) / (10.0 ** 9)
+                bandwidth = (((byte - value) / SLEEP_TIME) * 8) / GIGABYTE
                 self.iperf.update(dpid, match, byte)
             else:
-                bandwidth = ((byte / SLEEP_TIME) * 8) / (10.0 ** 9)
+                bandwidth = ((byte / SLEEP_TIME) * 8) / GIGABYTE
                 self.iperf.add(dpid, match, byte)
-            if bandwidth >= .1:
-                print(bandwidth, byte, value)
+            # if bandwidth >= 0.1:
+            # if banda > 500 and (host in switch) and (mac_src != mac_host)
+            if dpid == 1 and bandwidth >= .1 and self._first_time:
+                first_time = False
+                parser = ev.msg.datapath.ofproto_parser
+                if actions == 2:
+                    self.add_flow(1, 10, match, [parser.OFPActionOutput(3)])
+                    self.add_flow(5, 10, match.set_in_port(2), [parser.OFPActionOutput(1)])
+                    self.add_flow(6, 10, match, [parser.OFPActionOutput(1)])
+                elif actions == 3:
+                    self.add_flow(1, 10, match, [parser.OFPActionOutput(2)])
+                    self.add_flow(2, 10, match, [parser.OFPActionOutput(2)])
+                    self.add_flow(3, 10, match, [parser.OFPActionOutput(2)])
+                print(dpid, bandwidth, byte, value)
+
 
     @set_ev_cls(ofp_event.EventOFPPortStatsReply, MAIN_DISPATCHER)
     def _port_stats_reply_handler(self, ev):

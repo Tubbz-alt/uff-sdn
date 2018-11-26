@@ -88,8 +88,6 @@ class SimpleSwitch13(app_manager.RyuApp):
                                     match=match, instructions=inst)
         datapath.send_msg(mod)
 
-    # entrada/saida: switch, link
-
     # PORTA
     @set_ev_cls(event.EventPortDelete)
     def deleta_porta(self, port):
