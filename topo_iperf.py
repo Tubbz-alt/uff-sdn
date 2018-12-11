@@ -1,3 +1,4 @@
+from mininet.log import setLogLevel
 from mininet.topo import Topo
 from mininet.node import RemoteController
 from mininet.cli import CLI
@@ -40,9 +41,13 @@ def main():
     topo = MyTopo()
     mn = Mininet(topo=topo, controller=RemoteController)
     mn.start()
+    h2 = mn.get('h2')
+    # h2.cmdPrint('iperf -s -u -i 1 -p 11111 > logs/iperf1.log 2>&1 &')
+    # h2.cmdPrint('iperf -s -u -i 1 -p 22222 > logs/iperf2.log 2>&1 &')
     CLI(mn)
     mn.stop()
 
 
 if __name__ == '__main__':
+    setLogLevel('info')
     main()
