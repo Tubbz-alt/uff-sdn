@@ -21,8 +21,10 @@ sudo ovs-ofctl dump-flows s3
 sudo ovs-ofctl add-flow s3 priority=10,in_port=2,dl_type=0x0800,nw_proto=1,actions=dec_ttl,output:"s3-eth1"
 sudo ovs-ofctl add-flow s1 priority=10,in_port=1,dl_type=0x0800,nw_proto=1,actions=dec_ttl,output:"s1-eth3"
 
-iperf -c 10.0.0.2 -u -b 1G -i 1 -t 100 -p 12345
-iperf -s -u -i 1 -p 12345
+iperf -c 10.0.0.2 -u -b 500M -i 1 -t 999 -p 11111
+iperf -c 10.0.0.2 -u -b 500M -i 1 -t 999 -p 22222
+iperf -s -u -i 1 -p 11111
+iperf -s -u -i 1 -p 22222
 
 clear; clear; mn --controller remote --mac --custom topo2.py --topo ciclo
 clear; clear; ryu-manager --observe-links simple_switch_13_st_monitor.py
