@@ -34,19 +34,29 @@ from ryu.lib import mac
 
 
 class enlace:
-    def __init__(self, src, sport, dst, dport):
-        self.src = src
-        self.src_port = sport
-        self.dst = dst
-        self.dst_port = dport
+    def __init__(self, dpid_src, src_port, dpid_dst, dst_port):
+        self.dpid_src = dpid_src
+        self.src_port = src_port
+        self.dpid_dst = dpid_dst
+        self.dst_port = dst_port
+
+    def __str__(self):
+        return '{}:{} -> {}:{}'.format(str(self.dpid_src), str(self.src_port), str(self.dpid_dst), str(self.dst_port))
 
 
 class topologia:
     def __init__(self):
         self.sws = []
-        self.dp_to_mac = {}
-        self.dp_to_mac.setdefault(0, {})
+        # self.dp_to_mac = {}
+        # self.dp_to_mac.setdefault(0, {})
         self.enlaces = []
+
+    def __str__(self):
+        asd = ''
+        for enlace in self.enlaces:
+            asd += '- {}\n'.format(str(enlace))
+        msg = 'Switches: {} \nEnlaces:\n{}'.format(str(self.sws), asd)
+        return msg
 
 
 class SimpleSwitch13(app_manager.RyuApp):
@@ -61,6 +71,7 @@ class SimpleSwitch13(app_manager.RyuApp):
         self.dpset = kwargs.get('dpset', None)
         self.stplib = kwargs.get('stplib', None)
     	self.topo = topologia()
+        self.first_time = True
 
     @set_ev_cls(ofp_event.EventOFPSwitchFeatures, CONFIG_DISPATCHER)
     def switch_features_handler(self, ev):
@@ -157,34 +168,15 @@ class SimpleSwitch13(app_manager.RyuApp):
         src = eth.src
 
         dpid = datapath.id
-        self.switch_to_port.setdefault(dpid, {})
 
-        tcp_packet = pkt.get_protocol(tcp.tcp)
-        ip_packet = pkt.get_protocol(ipv4.ipv4)
-        arp_packet = pkt.get_protocol(arp.arp)
-        new_msg = '>>> {} {}'.format(src, dst)
-        if ip_packet:
-            new_msg += ' | {} {}'.format(ip_packet.src, ip_packet.dst)
-        if tcp_packet:
-            new_msg += ' | {} {}'.format(tcp_packet.src_port,
-                                         tcp_packet.dst_port)
+        #print self.topo
+        #if self.first_time:
+        dpid_paths = self.dijkstra(self.topo,dpid)
+        get_out_port(dpid, )
+        #print "\n"
+        #    self.first_time = False
 
-        # print '{} | s{}'.format(new_msg, dpid)
-
-        self.switch_to_port[dpid][src] = in_port
-        if arp_packet:
-            self.switch_to_port[dpid][arp_packet.src_ip] = in_port
-        elif ip_packet:
-            self.switch_to_port[dpid][ip_packet.src] = in_port
-
-        if dst in self.switch_to_port[dpid]:
-            out_port = self.switch_to_port[dpid][dst]
-        elif ip_packet and ip_packet.dst in self.switch_to_port[dpid]:
-            out_port = self.switch_to_port[dpid][ip_packet.dst]
-        elif arp_packet and arp_packet.dst_ip in self.switch_to_port[dpid]:
-            out_port = self.switch_to_port[dpid][arp_packet.dst_ip]
-        else:
-            out_port = ofproto.OFPP_FLOOD
+        out_port = ofproto.OFPP_FLOOD
         actions_add = [parser.OFPActionDecNwTtl(), parser.OFPActionOutput(out_port)]
         actions = [parser.OFPActionOutput(out_port)]
 
@@ -194,7 +186,7 @@ class SimpleSwitch13(app_manager.RyuApp):
             match.set_dl_type(ether.ETH_TYPE_IP)
             match.set_ip_proto(inet.IPPROTO_ICMP)
             match.set_in_port(in_port)
-            print self.topo.dp_to_mac
+            # print self.topo.dp_to_mac
             match.set_dl_src(mac.haddr_to_bin(src))
             match.set_dl_dst(mac.haddr_to_bin(dst))
             # print(dst, src)
@@ -219,7 +211,7 @@ class SimpleSwitch13(app_manager.RyuApp):
     def choose_min_cost_node(cls, cost, visited):
         minimum = float('inf')
         chosen_node = None
-        for switch, value in cost:
+        for switch, value in cost.items():
             if visited[switch] == False and value < minimum:
                 minimum = value
                 chosen_node = switch
@@ -227,61 +219,65 @@ class SimpleSwitch13(app_manager.RyuApp):
 
     @classmethod
     def get_neighbors(cls, parent, actual, enlaces):
-        neighbors = []
+        neighbors = {}
         for enlace in enlaces:
-            if enlace.src == actual and enlace.dst != parent:
-                neighbors.append((enlace.dst,enlace.dst_port))
+            if enlace.dpid_src == actual and enlace.dpid_dst != parent:
+                neighbors[enlace.dpid_dst] = enlace.dst_port
         return neighbors
 
     @classmethod
     def all_visited(cls, visited):
-        for v in visited:
-            if v is False:
+        for value in visited.values():
+            if value is False:
                 return False
         return True
 
     def dijkstra(self, topo, initial):
-        previous=[]
-        cost=[]
-        visited=[]
+        previous = {}
+        cost = {}
+        visited = {}
 
         for sw in topo.sws:
-            cost.append((sw, float('inf')))
-            visited.append((sw, False))
+            cost[sw] = float('inf')
+            visited[sw] = False
         cost[initial] = 0
 
         parent = None
-        actual = initial
 
         while self.all_visited(visited) is False:
             actual = self.choose_min_cost_node(cost, visited)
-            neighbors = self.get_neighbors(parent, actual, self.topo.enlaces)
+            neighbors = self.get_neighbors(parent, actual, topo.enlaces)
             for neighbor in neighbors:
                 if actual == initial:
                     cost[neighbor] = 1
                     previous[neighbor] = initial
                 else:
-                    sum = cost[actual] + 1 # Se fosse com pesos diferentes, teria que somar com o peso do link de actual para neighbor
-                    if sum < cost[neighbor]:
-                        cost[neighbor] = sum
+                    soma = cost[actual] + 1 # Se fosse com pesos diferentes, teria que somar com o peso do link de actual para neighbor
+                    if soma < cost[neighbor]:
+                        cost[neighbor] = soma
                         previous[neighbor] = actual
             visited[actual] = True
 
-        return self.getPaths(initial, self.topo.sws, previous)
+        return self.getPaths(initial, topo.sws, previous)
 
     @classmethod
     def getPaths(cls, initial, switches, previous):
         paths = []
-        path = []
-        for switch in switches:
-            if switch != initial:
-                path.append(initial)
-                hop = previous[switch]
+        #print "\nInitial {}".format(initial)
+        for dpid in switches:
+            #print "Last {}".format(dpid)
+            path = []
+            if dpid != initial:
+                hop = previous[dpid]
                 while hop != initial:
-                    paths.append(hop)
+                    #print ">>HOP",hop
+                    path.insert(0, hop)
                     hop = previous[hop]
-                path.append(switch)
+                path.insert(0, initial)
+                path.append(dpid)
+                #print path
                 paths.append(path)
+        return paths
 
     @classmethod
     def get_out_port(cls, src, dst, paths, enlaces):

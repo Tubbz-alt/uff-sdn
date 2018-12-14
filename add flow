@@ -21,8 +21,8 @@ sudo ovs-ofctl dump-flows s3
 sudo ovs-ofctl add-flow s3 priority=10,in_port=2,dl_type=0x0800,nw_proto=1,actions=dec_ttl,output:"s3-eth1"
 sudo ovs-ofctl add-flow s1 priority=10,in_port=1,dl_type=0x0800,nw_proto=1,actions=dec_ttl,output:"s1-eth3"
 
-iperf -c 10.0.0.2 -u -b 500M -i 1 -t 999 -p 11111
-iperf -c 10.0.0.2 -u -b 500M -i 1 -t 999 -p 22222
+iperf -c 10.0.0.2 -u -b 10M -i 1 -t 999 -p 11111
+iperf -c 10.0.0.2 -u -b 10M -i 1 -t 999 -p 22222
 iperf -s -u -i 1 -p 11111
 iperf -s -u -i 1 -p 22222
 

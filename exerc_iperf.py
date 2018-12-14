@@ -115,24 +115,31 @@ class SimpleMonitor13(simple_switch_stp_13.SimpleSwitch13):
                     print("New flow for port {}".format(port))
                     self._first_time = False
                     if port == 2:
-                        self.new_udp_flow(dpid=1, port_out=3)
-                        self.new_udp_flow(dpid=5, port_out=1)
-                        self.new_udp_flow(dpid=6, port_out=1)
+                        self.new_udp_flow(dpid=1, port_out_to=3, port_out_from=1)
+                        self.new_udp_flow(dpid=5, port_out_to=1, port_out_from=2)
+                        self.new_udp_flow(dpid=6, port_out_to=1, port_out_from=2)
+                        self.new_udp_flow(dpid=4, port_out_to=1, port_out_from=3)
                     elif port == 3:
-                        self.new_udp_flow(dpid=1, port_out=2)
-                        self.new_udp_flow(dpid=2, port_out=2)
-                        self.new_udp_flow(dpid=3, port_out=2)
-                    self.new_udp_flow(dpid=4, port_out=1)
+                        self.new_udp_flow(dpid=1, port_out_to=2, port_out_from=1)
+                        self.new_udp_flow(dpid=2, port_out_to=2, port_out_from=1)
+                        self.new_udp_flow(dpid=3, port_out_to=2, port_out_from=1)
+                        self.new_udp_flow(dpid=4, port_out_to=1, port_out_from=2)
 
-    def new_udp_flow(self, dpid, port_out):
+    def new_udp_flow(self, dpid, port_out_to, port_out_from):
         datapath = self.datapaths[dpid]
 
         ofproto = datapath.ofproto
         parser = datapath.ofproto_parser
 
-        match = parser.OFPMatch(eth_type=2048, ip_proto=17, udp_dst=11111)
-        inst = [parser.OFPInstructionActions(ofproto.OFPIT_APPLY_ACTIONS,
-                                            [parser.OFPActionOutput(port_out)])]
-        mod = parser.OFPFlowMod(datapath=datapath, priority=10,
-                                match=match, instructions=inst)
-        datapath.send_msg(mod)
+        match_to = parser.OFPMatch(eth_type=2048, ip_proto=17, udp_dst=11111)
+        match_from = parser.OFPMatch(eth_type=2048, ip_proto=17, udp_src=11111)
+        inst_to = [parser.OFPInstructionActions(ofproto.OFPIT_APPLY_ACTIONS,
+                                            [parser.OFPActionOutput(port_out_to)])]
+        inst_from = [parser.OFPInstructionActions(ofproto.OFPIT_APPLY_ACTIONS,
+                                            [parser.OFPActionOutput(port_out_from)])]
+        mod_to = parser.OFPFlowMod(datapath=datapath, priority=10,
+                                match=match_to, instructions=inst_to)
+        mod_from = parser.OFPFlowMod(datapath=datapath, priority=10,
+                                match=match_from, instructions=inst_from)
+        datapath.send_msg(mod_to)
+        datapath.send_msg(mod_from)
