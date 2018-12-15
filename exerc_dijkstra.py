@@ -47,9 +47,10 @@ class enlace:
 class topologia:
     def __init__(self):
         self.sws = []
-        # self.dp_to_mac = {}
-        # self.dp_to_mac.setdefault(0, {})
+        self.dpid_to_mac = {}
+        #self.dpid_to_mac.setdefault(0, [])
         self.enlaces = []
+        self.dpid_hosts = {}
 
     def __str__(self):
         asd = ''
@@ -122,11 +123,15 @@ class SimpleSwitch13(app_manager.RyuApp):
         # list: ev.switch.ports
         # {'hw_addr': '1a:a5:c5:a3:c5:16', '_config': 0, 'name': 's1-eth1', '_state': 4, 'dpid': 1, 'port_no': 1}
         print ("Switch ID: {} entrou na topologia!".format(ev.switch.dp.id))
-        for asd in ev.switch.ports:
-            print '>>>>>>>', asd.__dict__
+        for port in ev.switch.ports:
+            print '>>>>>>>', port.__dict__
+            #self.topo.dpid_to_mac.setdefault(ev.switch.dp.id, [])
+            #self.topo.dpid_to_mac[ev.switch.dp.id].append(port.hw_addr)
+            self.topo.dpid_to_mac.setdefault(ev.switch.dp.id, {})
+            self.topo.dpid_to_mac[ev.switch.dp.id].setdefault(port.port_no,port.hw_addr)
         print '\n'
         self.topo.sws.append(ev.switch.dp.id)
-        # self.topo.dp_to_mac[ev.switch.dp.id] = ev.switch.ports.hw_addr
+
 
     @set_ev_cls(event.EventSwitchLeave, MAIN_DISPATCHER)
     def saiu_switch(self, ev):
@@ -169,36 +174,61 @@ class SimpleSwitch13(app_manager.RyuApp):
 
         dpid = datapath.id
 
+        print "PACKET_IN! DPID:",dpid
+
+        mac_is_of_switch = False
+        #print ">>>SWITCHES MACS (DPID,PORT_NO,MAC)",self.topo.dpid_to_mac
+
+        for switch_port_list in self.topo.dpid_to_mac.values(): # Check if the source mac is from a switch
+            if src in switch_port_list.values():
+                mac_is_of_switch = True
+
+        if src not in self.topo.dpid_hosts.values() and not mac_is_of_switch: # Save only macs that are not from switches
+            self.topo.dpid_hosts[dpid] = src
+
+        #print "HOSTS_LIST >>",self.topo.dpid_hosts
+
         #print self.topo
         #if self.first_time:
-        dpid_paths = self.dijkstra(self.topo,dpid)
-        get_out_port(dpid, )
-        #print "\n"
-        #    self.first_time = False
+        if dst in self.topo.dpid_hosts.values(): # Check if the host location is known
+            print "---MESSAGE---\nFROM", dpid
+            dpid_paths = self.dijkstra(self.topo, dpid)
+            for switch_id, host_mac in self.topo.dpid_hosts.items():    # Get the switch id which is connected to the destination host
+                if host_mac == dst:
+                    dest_dpid = switch_id
+                    print ">>> HOST ESTA CONECTADO AO SWITCH:", dest_dpid
+            print "TO", dest_dpid
+            print "PATHS",dpid_paths
+            out_port = self.get_out_port(dpid, dest_dpid, dpid_paths, self.topo.enlaces)
+            print "OUTPORT RESULT",out_port
+        else:
+            out_port = ofproto.OFPP_FLOOD
 
-        out_port = ofproto.OFPP_FLOOD
-        actions_add = [parser.OFPActionDecNwTtl(), parser.OFPActionOutput(out_port)]
         actions = [parser.OFPActionOutput(out_port)]
 
         # install a flow to avoid packet_in next time
         if out_port != ofproto.OFPP_FLOOD:
+
+            #actions = [parser.OFPActionSetField(eth_src=self.topo.dpid_to_mac[dpid][out_port]), parser.OFPActionDecNwTtl(), parser.OFPActionOutput(out_port)]
+            actions = [parser.OFPActionDecNwTtl(), parser.OFPActionOutput(out_port)]
             match = parser.OFPMatch()
             match.set_dl_type(ether.ETH_TYPE_IP)
             match.set_ip_proto(inet.IPPROTO_ICMP)
-            match.set_in_port(in_port)
+            #match.set_in_port(in_port)
             # print self.topo.dp_to_mac
-            match.set_dl_src(mac.haddr_to_bin(src))
+            #match.set_dl_src(mac.haddr_to_bin(src))
             match.set_dl_dst(mac.haddr_to_bin(dst))
             # print(dst, src)
 
             # verify if we have a valid buffer_id, if yes avoid to send both
             # flow_mod & packet_out
             if msg.buffer_id != ofproto.OFP_NO_BUFFER:
-                self.add_flow(datapath, 10, match, actions_add, msg.buffer_id)
+                self.add_flow(datapath, 65535, match, actions, msg.buffer_id)
                 return
             else:
-                self.add_flow(datapath, 10, match, actions_add)
-                pass
+                self.add_flow(datapath, 65535, match, actions)
+        else:
+            print ">>>>FLOOD!"
         data = None
         if msg.buffer_id == ofproto.OFP_NO_BUFFER:
             data = msg.data
@@ -280,12 +310,14 @@ class SimpleSwitch13(app_manager.RyuApp):
         return paths
 
     @classmethod
-    def get_out_port(cls, src, dst, paths, enlaces):
+    def get_out_port(cls, dpid_src, dpid_dst, paths, enlaces):
         next_hop = None
         for path in paths:
-            if path[0] == src:
-                if path[-1] == dst: #get last
+            if path[0] == dpid_src:
+                if path[-1] == dpid_dst: #get last
                     next_hop = path[1]
+                    print ">>SHOULD FORWARD TO SWITCH:",next_hop
         for enlace in enlaces:
-            if enlace.src == src and enlace.dst != next_hop:
-               return enlace.src_port
+            if enlace.dpid_src == dpid_src and enlace.dpid_dst == next_hop:
+                print ">>MATCHING LINK ", str(enlace)
+                return enlace.src_port
