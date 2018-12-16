@@ -29,7 +29,7 @@ from ryu.lib import stplib
 from ryu.lib import mac
 
 
-class enlace:
+class topo_link:
     def __init__(self, dpid_src, src_port, dpid_dst, dst_port):
         self.dpid_src = dpid_src
         self.src_port = src_port
@@ -42,19 +42,19 @@ class enlace:
             str(self.dpid_dst), str(self.dst_port)))
 
 
-class topologia:
+class topology:
     def __init__(self):
         self.sws = []
         self.dpid_to_mac = {}
         self.dpid_to_mac.setdefault(0, [])
-        self.enlaces = []
+        self.links = []
         self.dpid_hosts = {}
 
     def __str__(self):
-        asd = ''
-        for enlace in self.enlaces:
-            asd += '- {}\n'.format(str(enlace))
-        msg = 'Switches: {} \nEnlaces:\n{}'.format(str(self.sws), asd)
+        all_links = ''
+        for topo_link in self.links:
+            all_links += '- {}\n'.format(str(topo_link))
+        msg = 'Switches: {} \nEnlaces:\n{}'.format(str(self.sws), all_links)
         return msg
 
 
@@ -67,9 +67,9 @@ class SimpleSwitch13(app_manager.RyuApp):
         self.switch_to_port = {
             # dpid: {mac: port, ip: port}
         }
-        self.dpset = kwargs.get('dpset', None)
-        self.stplib = kwargs.get('stplib', None)
-        self.topo = topologia()
+        # self.dpset = kwargs.get('dpset', None)
+        # self.stplib = kwargs.get('stplib', None)
+        self.topo = topology()
         self.first_time = True
 
     @set_ev_cls(ofp_event.EventOFPSwitchFeatures, CONFIG_DISPATCHER)
@@ -101,18 +101,21 @@ class SimpleSwitch13(app_manager.RyuApp):
     # PORTA
     @set_ev_cls(event.EventPortDelete)
     def deleta_porta(self, port):
-        print('Porta deletada switch {}, porta {}' .format(
-            port.port.dpid, port.port.port_no))
+        # print('Porta deletada switch {}, porta {}' .format(
+        #     port.port.dpid, port.port.port_no))
+        pass
 
     @set_ev_cls(event.EventPortAdd)
     def adiciona_porta(self, port):
-        print('Porta adicionada switch {}, porta {}' .format(
-            port.port.dpid, port.port.port_no))
+        # print('Porta adicionada switch {}, porta {}' .format(
+        #     port.port.dpid, port.port.port_no))
+        pass
 
     @set_ev_cls(event.EventPortModify)
     def modifica_porta(self, port):
-        print('Porta modificada switch {}, porta {}, mac {}' .format(
-            port.port.dpid, port.port.port_no, port.port.hw_addr))
+        # print('Porta modificada switch {}, porta {}, mac {}' .format(
+        #     port.port.dpid, port.port.port_no, port.port.hw_addr))
+        pass
 
     # SWITCH
 
@@ -121,35 +124,36 @@ class SimpleSwitch13(app_manager.RyuApp):
         # list: ev.switch.ports
         # {'hw_addr': '1a:a5:c5:a3:c5:16', '_config': 0, 'name': 's1-eth1',
         # '_state': 4, 'dpid': 1, 'port_no': 1}
-        print('Switch ID: {} entrou na topologia!'.format(ev.switch.dp.id))
+        # print('Switch ID: {} entrou na topologia!'.format(ev.switch.dp.id))
         for port in ev.switch.ports:
-            print('>>>>>>>', port.__dict__)
+            # print('>>>>>>>', port.__dict__)
             # self.topo.dpid_to_mac.setdefault(ev.switch.dp.id, [])
             # self.topo.dpid_to_mac[ev.switch.dp.id].append(port.hw_addr)
             self.topo.dpid_to_mac.setdefault(ev.switch.dp.id, {})
             self.topo.dpid_to_mac[ev.switch.dp.id].setdefault(
                 port.port_no, port.hw_addr)
-        print('\n')
+        # print('\n')
         self.topo.sws.append(ev.switch.dp.id)
 
     @set_ev_cls(event.EventSwitchLeave, MAIN_DISPATCHER)
     def saiu_switch(self, ev):
-        print('Switch ID: {} saiu da topologia!'.format(ev.switch.dp.id))
+        # print('Switch ID: {} saiu da topologia!'.format(ev.switch.dp.id))
         del self.topo.sws[self.topo.sws.index(ev.switch.dp.id)]
 
     # LINK
     @set_ev_cls(event.EventLinkAdd, MAIN_DISPATCHER)
     def entrou_link(self, ev):
-        print('ENTROU um link!')
+        # print('ENTROU um link!')
         # {} <> {}'.format(ev.link.src.__dict__, ev.link.dst.__dict__)
-        self.topo.enlaces.append(enlace(
+        self.topo.links.append(topo_link(
             ev.link.src.dpid, ev.link.src.port_no,
             ev.link.dst.dpid, ev.link.dst.port_no))
 
     @set_ev_cls(event.EventLinkDelete, MAIN_DISPATCHER)
     def saiu_link(self, ev):
-        print('SAIU um link!')
-        # del self.topo.elnaces[self.topo.enlaces.index(ev.switch.dp.id)]
+        # print('SAIU um link!')
+        # del self.topo.elnaces[self.topo.links.index(ev.switch.dp.id)]
+        pass
 
     # -------------------------------------------------------------------------------
 
@@ -182,7 +186,7 @@ class SimpleSwitch13(app_manager.RyuApp):
 
         for switch_port_list in self.topo.dpid_to_mac.values():
             # Check if the source mac is from a switch
-            if src in switch_port_list.values():
+            if src in switch_port_list:
                 mac_is_of_switch = True
 
         if src not in self.topo.dpid_hosts.values() and not mac_is_of_switch:
@@ -205,7 +209,7 @@ class SimpleSwitch13(app_manager.RyuApp):
             print('TO', dest_dpid)
             print('PATHS', dpid_paths)
             out_port = self.get_out_port(
-                dpid, dest_dpid, dpid_paths, self.topo.enlaces)
+                dpid, dest_dpid, dpid_paths, self.topo.links)
             print('OUTPORT RESULT', out_port)
         else:
             out_port = ofproto.OFPP_FLOOD
@@ -259,11 +263,11 @@ class SimpleSwitch13(app_manager.RyuApp):
         return chosen_node
 
     @classmethod
-    def get_neighbors(cls, parent, actual, enlaces):
+    def get_neighbors(cls, parent, actual, links):
         neighbors = {}
-        for enlace in enlaces:
-            if enlace.dpid_src == actual and enlace.dpid_dst != parent:
-                neighbors[enlace.dpid_dst] = enlace.dst_port
+        for topo_link in links:
+            if topo_link.dpid_src == actual and topo_link.dpid_dst != parent:
+                neighbors[topo_link.dpid_dst] = topo_link.dst_port
         return neighbors
 
     @classmethod
@@ -287,7 +291,7 @@ class SimpleSwitch13(app_manager.RyuApp):
 
         while self.all_visited(visited) is False:
             actual = self.choose_min_cost_node(cost, visited)
-            neighbors = self.get_neighbors(parent, actual, topo.enlaces)
+            neighbors = self.get_neighbors(parent, actual, topo.links)
             for neighbor in neighbors:
                 if actual == initial:
                     cost[neighbor] = 1
@@ -324,14 +328,15 @@ class SimpleSwitch13(app_manager.RyuApp):
         return paths
 
     @classmethod
-    def get_out_port(cls, dpid_src, dpid_dst, paths, enlaces):
+    def get_out_port(cls, dpid_src, dpid_dst, paths, links):
         next_hop = None
         for path in paths:
             if path[0] == dpid_src:
                 if path[-1] == dpid_dst:  # get last
                     next_hop = path[1]
                     print('>>SHOULD FORWARD TO SWITCH:', next_hop)
-        for enlace in enlaces:
-            if enlace.dpid_src == dpid_src and enlace.dpid_dst == next_hop:
-                print('>>MATCHING LINK ', str(enlace))
-                return enlace.src_port
+        for topo_link in links:
+            if topo_link.dpid_src == dpid_src and \
+               topo_link.dpid_dst == next_hop:
+                print('>>MATCHING LINK ', str(topo_link))
+                return topo_link.src_port

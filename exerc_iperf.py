@@ -109,7 +109,7 @@ class SimpleMonitor13(simple_switch_stp_13.SimpleSwitch13):
                     self.iperf.add(dpid, port, byte)
 
                 if dpid == 1 and bandwidth >= 9:
-                    print dpid, port, bandwidth, self._first_time
+                    print(dpid, port, bandwidth, self._first_time)
 
                 if dpid == 1 and bandwidth >= 15 and self._first_time:
                     print("New flow for port {}".format(port))
@@ -133,13 +133,17 @@ class SimpleMonitor13(simple_switch_stp_13.SimpleSwitch13):
 
         match_to = parser.OFPMatch(eth_type=2048, ip_proto=17, udp_dst=11111)
         match_from = parser.OFPMatch(eth_type=2048, ip_proto=17, udp_src=11111)
-        inst_to = [parser.OFPInstructionActions(ofproto.OFPIT_APPLY_ACTIONS,
-                                            [parser.OFPActionOutput(port_out_to)])]
-        inst_from = [parser.OFPInstructionActions(ofproto.OFPIT_APPLY_ACTIONS,
-                                            [parser.OFPActionOutput(port_out_from)])]
-        mod_to = parser.OFPFlowMod(datapath=datapath, priority=10,
-                                match=match_to, instructions=inst_to)
-        mod_from = parser.OFPFlowMod(datapath=datapath, priority=10,
-                                match=match_from, instructions=inst_from)
+        inst_to = [parser.OFPInstructionActions(
+            ofproto.OFPIT_APPLY_ACTIONS,
+            [parser.OFPActionOutput(port_out_to)])]
+        inst_from = [parser.OFPInstructionActions(
+            ofproto.OFPIT_APPLY_ACTIONS,
+            [parser.OFPActionOutput(port_out_from)])]
+        mod_to = parser.OFPFlowMod(
+            datapath=datapath, priority=65535,
+            match=match_to, instructions=inst_to)
+        mod_from = parser.OFPFlowMod(
+            datapath=datapath, priority=65535,
+            match=match_from, instructions=inst_from)
         datapath.send_msg(mod_to)
         datapath.send_msg(mod_from)
